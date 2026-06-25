@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Virtual envs ---
+.venv/
+venv/
+env/
+
+# --- Secrets ---
+.env
+*.key
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Generated reports (keep the folder, ignore dated outputs) ---
+reports/*.md
+!reports/.gitkeep
+
+# --- Caches ---
+.cache/
+*.parquet
+data_cache/
+
+# --- Local tracker store ---
+data/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

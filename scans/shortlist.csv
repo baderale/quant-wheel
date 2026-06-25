@@ -1,0 +1,8 @@
+ticker,tier,sector,note
+F,A,Auto,Classic small-account anchor; deep penny-wide weeklies; ~4% dividend cushion if assigned
+SOFI,A,Fintech,Most liquid sub-$20 chain; higher IV than F; no dividend; news-driven
+T,A,Telecom,Lowest vol + ~4.9% dividend; best "happy to be assigned"; eats most of the account
+AAL,A,Airline,Fits budget; decent premium; cyclical/macro-sensitive + debt-heavy
+NIO,B,China EV,Cheapest meaningful chain; speculative (regulatory/dilution); most wheel-able tier-B
+MARA,B,Bitcoin miner,Very high IV = fat premium but leveraged BTC proxy; only if willing to hold a miner
+CLSK,B,BTC/AI miner,High IV; stronger operator story; still crypto-beta and headline-driven

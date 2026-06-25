@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "quantwheel"
+version = "0.1.0"
+description = "A quantitative + agentic engine for running the Wheel options strategy on a small account."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "baderale" }]
+keywords = ["options", "wheel-strategy", "quant", "langgraph", "monte-carlo", "markov"]
+
+# Core runtime: the quant + data layer. Kept separate from the agent/UI extras
+# so someone can `pip install` just the math without LangChain or Streamlit.
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "yfinance>=0.2.40",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# The LangChain/LangGraph council + weekly agent.
+agents = [
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "langchain-anthropic>=0.2",
+]
+# The default Streamlit dashboard.
+ui = [
+    "streamlit>=1.36",
+    "plotly>=5.22",
+]
+# The alternative Textual TUI (proves the UI is swappable).
+tui = [
+    "textual>=0.60",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+# Research notebooks (backtest plots, calibration, ablation).
+research = [
+    "matplotlib>=3.8",
+    "jupyter>=1.0",
+]
+# Convenience: install everything.
+all = [
+    "quantwheel[agents,ui,tui,dev,research]",
+]
+
+[project.scripts]
+# Quant-only scan (no LLM, no UI) — useful for cron/CI and quick checks.
+quantwheel-scan = "quantwheel.cli:scan_cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quantwheel"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
