@@ -81,7 +81,8 @@ def build_weekly_agent(
     g = StateGraph(WheelState)
     g.add_node("load_universe", nodes.load_universe)
     g.add_node("screen", partial(nodes.screen, wheel_config=config))
-    g.add_node("council", partial(nodes.council, llm=llm, provider=provider, model=model))
+    g.add_node("council", partial(nodes.council, llm=llm, provider=provider,
+                                   model=model, wheel_config=config))
     g.add_node("rank_pick", nodes.rank_pick)
     g.add_node("draft_card", partial(nodes.draft_card, wheel_config=config))
     g.add_node("human_approval", _human_approval)

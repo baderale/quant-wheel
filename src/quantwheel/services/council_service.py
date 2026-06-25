@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Optional
 
 from quantwheel.agents.council import run_council as _run
+from quantwheel.core.config import DEFAULT, WheelConfig
 from quantwheel.core.types import CouncilVerdict, ScoredCandidate
 
 
@@ -15,6 +16,7 @@ def run_council(
     candidates: list[ScoredCandidate],
     provider: Optional[str] = None,
     model: Optional[str] = None,
+    config: WheelConfig = DEFAULT,
 ) -> list[CouncilVerdict]:
     """Have the five personas vote on each candidate, then aggregate.
 
@@ -29,10 +31,13 @@ def run_council(
         subset of a :class:`ScanResult`).
     provider, model:
         Override the configured LLM provider / model id.
+    config:
+        Strategy config — supplies account size / position count so each
+        persona's rubric reflects the user's real account.
 
     Returns
     -------
     list[CouncilVerdict]
         One verdict per candidate, sorted by aggregate council score.
     """
-    return _run(candidates, provider=provider, model=model)
+    return _run(candidates, provider=provider, model=model, config=config)

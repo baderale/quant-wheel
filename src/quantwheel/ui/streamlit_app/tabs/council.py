@@ -9,10 +9,10 @@ from quantwheel.agents.llm import llm_available
 from quantwheel.services.council_service import run_council
 
 
-def render() -> None:
+def render(config=None) -> None:
     st.subheader("Investment council")
-    st.caption("Statistician · Buffett · Burry · Dalio · Simons — same evidence, "
-               "five judgements, one aggregate.")
+    st.caption("Statistician · Value Investor · Risk Manager · Macro Strategist · "
+               "Systematic Quant — same evidence, five judgements, one aggregate.")
 
     scan = st.session_state.get("scan")
     if scan is None:
@@ -27,7 +27,8 @@ def render() -> None:
 
     if st.button("🏛 Convene council", type="primary", disabled=not ready):
         with st.spinner("Five investors deliberating…"):
-            st.session_state["council"] = run_council(candidates)
+            kwargs = {"config": config} if config is not None else {}
+            st.session_state["council"] = run_council(candidates, **kwargs)
 
     verdicts = st.session_state.get("council")
     if not verdicts:

@@ -21,11 +21,13 @@ whether the rules actually improve the odds.
 The Wheel (sell cash-secured puts → if assigned, sell covered calls → repeat) is simple to state
 and tedious to run well: read the chart, estimate assignment risk, price the premium, check
 earnings, size it to your account — across a dozen tickers, every week. This automates the analysis
-while keeping a human at the trigger, and it's built around three honest constraints of a **$1,000
-Robinhood account**:
+while keeping a human at the trigger. It was built for a **$1,000 Robinhood account** but is
+**account-aware**: set your balance and how many concurrent positions you want, and it sizes a
+diversified book accordingly (a $1,000 account holds one position; a larger one spreads across
+several). It rests on three honest constraints:
 
-1. **One position at a time** — collateral ties up the whole account, so *name selection and
-   earnings-avoidance are the risk management.*
+1. **Sized to your account** — at $1,000 collateral ties up everything, so *name selection and
+   earnings-avoidance are the risk management*; at larger balances it allocates across several names.
 2. **Real option data** — prices against the live chain's implied vol and bid/ask (with an honest
    theoretical fallback when the feed is closed), so the numbers track what you'll actually get.
 3. **Proof, not vibes** — a backtest with calibration and rule-ablation says whether the edge is
@@ -41,9 +43,10 @@ Robinhood account**:
 | **Black-Scholes** | What's it worth, and the Greeks? | Priced with the chain's **real IV** |
 | **Council** | Does it make qualitative sense? | 5 LLM personas vote, an aggregator ranks |
 
-The council: **the Statistician** (trusts the math), **Warren Buffett** (would I be happy owning the
-shares?), **Michael Burry** (tail-risk skeptic), **Ray Dalio** (macro/regime), and **Jim Simons**
-(pure systematic — distrusts narrative).
+The council is five anonymized **archetypes**, each a distinct investing lens: **the Statistician**
+(trusts the math), **the Value Investor** (would I be happy owning the shares?), **the Risk Manager**
+(tail-risk skeptic), **the Macro Strategist** (macro/regime), and **the Systematic Quant** (pure
+systematic — distrusts narrative).
 
 ## What the backtest shows (rule ablation)
 

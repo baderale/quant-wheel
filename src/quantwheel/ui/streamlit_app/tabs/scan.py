@@ -4,8 +4,13 @@ from __future__ import annotations
 
 import streamlit as st
 
+from quantwheel.core.narrative import VERDICT_LEGEND
 from quantwheel.services.scan_service import run_weekly_scan
-from quantwheel.ui.streamlit_app._format import SCAN_COL_FORMAT, scan_to_df
+from quantwheel.ui.streamlit_app._format import (
+    SCAN_COL_FORMAT,
+    data_provenance,
+    scan_to_df,
+)
 from quantwheel.universe import DEFAULT_UNIVERSE
 
 
@@ -23,11 +28,18 @@ def render(config) -> None:
         st.info("Run a scan to see candidates.")
         return
 
+    st.caption(data_provenance(scan))
     df = scan_to_df(scan)
     st.dataframe(
         df.style.format(SCAN_COL_FORMAT, na_rep="—"),
         use_container_width=True, hide_index=True,
     )
+
+    # Verdict legend — explain the codes in the table, surfacing those in view first.
+    present = list(dict.fromkeys(c.verdict.value for c in scan.candidates))
+    with st.expander("🔑 What do the verdicts mean?", expanded=not scan.enterable):
+        for v in present + [k for k in VERDICT_LEGEND if k not in present]:
+            st.markdown(f"- **{v}** — {VERDICT_LEGEND.get(v, '—')}")
 
     enter = scan.enterable
     c1, c2 = st.columns(2)

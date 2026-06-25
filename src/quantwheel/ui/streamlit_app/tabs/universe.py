@@ -5,15 +5,21 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from quantwheel.core.config import DEFAULT
 from quantwheel.universe import DEFAULT_UNIVERSE
 
 
-def render() -> None:
+def render(config=None) -> None:
+    config = config or DEFAULT
     st.subheader("Watchlist")
+    # Per-position deployable cash sets the largest strike a cash-secured put can
+    # afford (strike × 100 ≤ budget). Shown so the watchlist reflects the account.
+    budget = config.deployable_cash / max(1, config.max_positions)
     st.caption(
         "The names the scan considers. Mirrors the vault shortlist — Tier-A "
         "(F, SOFI, T, AAL) are core; Tier-B (NIO, MARA, CLSK) are higher-risk. "
-        "At $1,000 only sub-~$7 strikes fit a true cash-secured put."
+        f"With ${budget:,.0f} per position, strikes up to ~${budget / 100:,.2f} "
+        "fit a cash-secured put."
     )
 
     current = st.session_state.get("universe", DEFAULT_UNIVERSE)

@@ -23,7 +23,7 @@ Design rules for this file:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
@@ -240,6 +240,9 @@ class ScanResult:
     account: float
     universe: list[str]
     candidates: list[ScoredCandidate]  # sorted best-first
+    # Wall-clock moment the live data was pulled. Lets the UI prove freshness
+    # ("fetched 14:32") rather than just showing the trading date.
+    fetched_at: Optional[datetime] = None
 
     @property
     def enterable(self) -> list[ScoredCandidate]:
@@ -259,7 +262,7 @@ class ScanResult:
 class CouncilVote:
     """One persona's structured opinion on one candidate."""
 
-    persona: str          # e.g. "Warren Buffett"
+    persona: str          # e.g. "The Value Investor"
     ticker: str
     stance: Stance
     conviction: float     # 0..1 — how strongly the persona holds the stance
@@ -309,6 +312,61 @@ class TradeCard:
     assignment_plan: str   # what to do if assigned (covered-call leg)
     council_consensus: str
     rationale: str
+
+
+# ---------------------------------------------------------------------------
+# Portfolio report (the plain-language, multi-position recommendation)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Position:
+    """One sized position chosen by the portfolio allocator.
+
+    The multi-position generalisation of "size one trade": how many contracts of
+    a given candidate fit, and the cash/credit that implies. For a $1,000 /
+    one-position account there is at most one of these — identical to before.
+    """
+
+    candidate: ScoredCandidate
+    contracts: int
+    collateral: float       # contracts * strike * 100 — cash set aside
+    credit: float           # contracts * pricing.credit — premium collected
+
+
+@dataclass(frozen=True)
+class ReportItem:
+    """A single recommended trade rendered for a human: the numbers + the words."""
+
+    position: Position
+    card: TradeCard
+    summary: str                 # one-line plain-English headline for this trade
+    explanation: list[str]       # ordered plain-English paragraphs (trade/odds/plans)
+    council_explanation: str = ""  # readable synthesis of the council vote
+    is_estimated: bool = False   # drives the live-vs-estimated badge
+    source: str = "yfinance"     # provenance tag from the option quote
+
+
+@dataclass(frozen=True)
+class PortfolioReport:
+    """The week's account-aware recommendation: zero or more readable trades.
+
+    This is what the dashboard Report tab renders. It is a *suggestion only* —
+    no code ever places an order.
+    """
+
+    as_of: date
+    account: float
+    deployable: float
+    max_positions: int
+    items: list[ReportItem]
+    cash_deployed: float
+    cash_reserved: float
+    total_credit: float
+    blended_pop: float           # contract-weighted probability of profit
+    headline: str                # plain-English top-line ("3 trades fit your $25,000…")
+    sit_out_reason: str = ""     # populated (and items empty) when nothing qualifies
+    fetched_at: Optional[datetime] = None
 
 
 @dataclass

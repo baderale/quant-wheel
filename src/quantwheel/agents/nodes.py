@@ -58,7 +58,7 @@ def screen(state: WheelState, *, wheel_config: WheelConfig) -> WheelState:
 
 
 def council(state: WheelState, *, llm=None, provider: Optional[str] = None,
-            model: Optional[str] = None) -> WheelState:
+            model: Optional[str] = None, wheel_config: WheelConfig = DEFAULT) -> WheelState:
     """Convene the council on the gated/enterable candidates only.
 
     If nothing passed the gates, we skip the (possibly paid) LLM calls entirely.
@@ -66,7 +66,8 @@ def council(state: WheelState, *, llm=None, provider: Optional[str] = None,
     enterable = state["scan"].enterable
     if not enterable:
         return {"verdicts": [], "message": "No gated candidates — council skipped."}
-    verdicts = run_council(enterable, llm=llm, provider=provider, model=model)
+    verdicts = run_council(enterable, llm=llm, provider=provider, model=model,
+                           config=wheel_config)
     return {"verdicts": verdicts}
 
 
@@ -136,9 +137,11 @@ def make_trade_card(
         collateral=c.sizing.collateral_used or q.strike * 100,
         exit_plan=exit_plan, assignment_plan=assignment_plan,
         council_consensus=(verdict.consensus if verdict else "n/a"),
-        rationale=(f"Verdict {c.verdict.value}, score {c.score:.1f}/6, "
-                   f"EV ${p.expected_value:.1f}, POP {p.pop:.0%}, "
-                   f"P(assign) {c.monte_carlo.p_assign:.0%}."),
+        rationale=(f"The model rates {c.ticker} a '{c.verdict.value}' setup "
+                   f"(score {c.score:.1f}/6): about a {p.pop:.0%} chance of profit, "
+                   f"expected value ~${p.expected_value:.1f} per contract, and "
+                   f"roughly a {c.monte_carlo.p_assign:.0%} chance of being assigned "
+                   f"the shares."),
     )
 
 

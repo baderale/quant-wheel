@@ -12,7 +12,8 @@ import argparse
 import sys
 from dataclasses import replace
 
-from quantwheel.core.config import DEFAULT
+from quantwheel.core import portfolio
+from quantwheel.core.config import DEFAULT, WheelConfig
 from quantwheel.core.types import ScanResult, Verdict
 from quantwheel.services.scan_service import run_weekly_scan
 from quantwheel.universe import DEFAULT_UNIVERSE, load_shortlist
@@ -23,6 +24,23 @@ _TAG = {
     Verdict.SKIP: "skip  ", Verdict.SKIP_REGIME: "skip-R", Verdict.SKIP_EARNINGS: "skip-E",
     Verdict.SKIP_LIQUIDITY: "skip-L", Verdict.SKIP_CAPITAL: "skip-$",
 }
+
+
+def _print_portfolio(result: ScanResult, config: WheelConfig) -> None:
+    """Print the sized, multi-position allocation (one line per fitted name)."""
+    positions = portfolio.allocate(result, config)
+    if not positions:
+        return
+    deployed = sum(p.collateral for p in positions)
+    credit = sum(p.credit for p in positions)
+    print(f"\nSized portfolio (up to {config.max_positions} position(s), "
+          f"${config.deployable_cash:,.0f} deployable):")
+    for p in positions:
+        q = p.candidate.quote
+        print(f"  {p.candidate.ticker:5} {p.contracts}x ${q.strike:.2f}p "
+              f"exp {q.expiry}  collateral ${p.collateral:,.0f}  credit ${p.credit:,.0f}")
+    print(f"  -> ${deployed:,.0f} collateral, ${credit:,.0f} premium, "
+          f"${config.account - deployed:,.0f} cash reserved.")
 
 
 def _print_report(result: ScanResult) -> None:
@@ -64,6 +82,8 @@ def scan_cli() -> None:
     ap.add_argument("--csv", help="Path to a shortlist CSV with a 'ticker' column.")
     ap.add_argument("--account", type=float, default=DEFAULT.account)
     ap.add_argument("--buffer", type=float, default=DEFAULT.cash_buffer)
+    ap.add_argument("--max-positions", type=int, default=DEFAULT.max_positions,
+                    help="Concurrent positions to allow (sizing spreads across them).")
     args = ap.parse_args()
 
     if args.tickers:
@@ -73,10 +93,12 @@ def scan_cli() -> None:
     else:
         universe = DEFAULT_UNIVERSE
 
-    config = replace(DEFAULT, account=args.account, cash_buffer=args.buffer)
+    config = replace(DEFAULT, account=args.account, cash_buffer=args.buffer,
+                     max_positions=args.max_positions)
     print("Scanning (live market data)...")
     result = run_weekly_scan(universe, config)
     _print_report(result)
+    _print_portfolio(result, config)
 
 
 if __name__ == "__main__":
