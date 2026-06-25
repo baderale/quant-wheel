@@ -19,14 +19,21 @@ from quantwheel.agents.personas.base import PersonaAgent
 from quantwheel.core.types import CouncilVerdict, CouncilVote, ScoredCandidate, Stance
 
 
-def build_council(llm=None, model: Optional[str] = None) -> list[PersonaAgent]:
-    """Instantiate the five council members (inject ``llm`` for offline tests)."""
+def build_council(
+    llm=None, provider: Optional[str] = None, model: Optional[str] = None
+) -> list[PersonaAgent]:
+    """Instantiate the five council members.
+
+    ``provider``/``model`` choose the LLM (Ollama, Anthropic, OpenAI, …) — or
+    leave them ``None`` to read ``QUANTWHEEL_PROVIDER``/``QUANTWHEEL_MODEL`` from
+    the environment. Inject ``llm`` to run fully offline in tests.
+    """
     return [
-        statistician.make(llm, model),
-        buffett.make(llm, model),
-        burry.make(llm, model),
-        dalio.make(llm, model),
-        simons.make(llm, model),
+        statistician.make(llm=llm, provider=provider, model=model),
+        buffett.make(llm=llm, provider=provider, model=model),
+        burry.make(llm=llm, provider=provider, model=model),
+        dalio.make(llm=llm, provider=provider, model=model),
+        simons.make(llm=llm, provider=provider, model=model),
     ]
 
 
@@ -78,10 +85,11 @@ def deliberate(candidate: ScoredCandidate, council: list[PersonaAgent]) -> Counc
 
 
 def run_council(
-    candidates: list[ScoredCandidate], llm=None, model: Optional[str] = None
+    candidates: list[ScoredCandidate], llm=None,
+    provider: Optional[str] = None, model: Optional[str] = None,
 ) -> list[CouncilVerdict]:
     """Deliberate over every candidate; return verdicts sorted best-first."""
-    council = build_council(llm, model)
+    council = build_council(llm=llm, provider=provider, model=model)
     verdicts = [deliberate(c, council) for c in candidates]
     verdicts.sort(key=lambda v: -v.aggregate_score)
     return verdicts

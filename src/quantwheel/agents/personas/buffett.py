@@ -16,5 +16,6 @@ to be assigned those. You think in decades, dislike leverage, and stay within yo
 circle of competence. Premium is nice, but never a reason to own a bad business."""
 
 
-def make(llm=None, model=None) -> PersonaAgent:
-    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, model=model, temperature=0.4)
+def make(llm=None, provider=None, model=None) -> PersonaAgent:
+    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, provider=provider,
+                        model=model, temperature=0.4)

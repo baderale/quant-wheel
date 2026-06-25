@@ -17,5 +17,6 @@ not a free lunch, and you would rather sit out than sell a put on a fragile name
 a deteriorating regime."""
 
 
-def make(llm=None, model=None) -> PersonaAgent:
-    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, model=model, temperature=0.4)
+def make(llm=None, provider=None, model=None) -> PersonaAgent:
+    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, provider=provider,
+                        model=model, temperature=0.4)

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 import streamlit as st
 
+from quantwheel.agents.llm import llm_available
 from quantwheel.services.council_service import run_council
 
 
@@ -20,15 +19,13 @@ def render() -> None:
         st.info("Run a scan first (Scan tab).")
         return
 
-    has_key = bool(os.getenv("ANTHROPIC_API_KEY"))
-    if not has_key:
-        st.warning("Set `ANTHROPIC_API_KEY` (e.g. in `.env`) to convene the council — "
-                   "the personas call Claude.")
+    ready, reason = llm_available()
+    (st.success if ready else st.warning)(f"LLM: {reason}")
 
     candidates = scan.enterable or scan.candidates[:3]
     st.caption(f"Will deliberate on: {', '.join(c.ticker for c in candidates) or '—'}")
 
-    if st.button("🏛 Convene council", type="primary", disabled=not has_key):
+    if st.button("🏛 Convene council", type="primary", disabled=not ready):
         with st.spinner("Five investors deliberating…"):
             st.session_state["council"] = run_council(candidates)
 

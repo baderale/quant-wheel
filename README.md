@@ -87,8 +87,30 @@ streamlit run src/quantwheel/ui/streamlit_app/app.py
 python -m quantwheel.ui.tui.app
 ```
 
-The **council and weekly agent** need a Claude key: copy `.env.example` → `.env` and set
-`ANTHROPIC_API_KEY`. The quant core, backtest, and dashboard scan/tracker work **with no key**.
+The quant core, backtest, scan, and tracker work **with no LLM and no key**. Only the council and
+weekly agent call an LLM — and you choose which.
+
+### Choose your LLM (local or cloud)
+
+The council is **provider-agnostic** — pick yours with environment variables (copy
+`.env.example` → `.env`):
+
+```bash
+# Fully local, no API key (recommended) — needs Ollama running:
+QUANTWHEEL_PROVIDER=ollama
+QUANTWHEEL_MODEL=llama3.2            # or qwen2.5, mistral-nemo — any tool/JSON-capable model
+pip install -e ".[agents,ui,llm-ollama]"
+
+# Or a cloud provider:
+QUANTWHEEL_PROVIDER=anthropic   # + ANTHROPIC_API_KEY   (pip install … llm-anthropic)
+QUANTWHEEL_PROVIDER=openai      # + OPENAI_API_KEY       (pip install … llm-openai)
+#   ↳ also works with OpenAI-compatible local servers via QUANTWHEEL_BASE_URL
+QUANTWHEEL_PROVIDER=google      # + GOOGLE_API_KEY       (pip install … llm-google)
+```
+
+Adding a new provider is one branch in `src/quantwheel/agents/llm.py`. Note: the council uses
+*structured output*, so a local model must support tool-calling / JSON-schema (llama3.1/3.2, qwen2.5
+do; tiny models like `gemma3:270m` don't).
 
 ## Learning project
 

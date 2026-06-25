@@ -1,12 +1,14 @@
 """The shared scaffold every council persona is built on.
 
 A persona is *one LangChain chain*: a prompt (its identity + the trade evidence)
-piped into a Claude model that is forced to return a **structured** opinion.
+piped into a chat model that is forced to return a **structured** opinion.
 Subclasses change nothing but the system prompt — that's the whole point of the
 council, and a clean demonstration of how little code a LangChain agent needs.
 
-The model is injectable (`llm=`), so the council can be unit-tested offline with
-a fake runnable and run live with Claude in production.
+The model is **provider-agnostic**: it comes from :func:`quantwheel.agents.llm.make_chat_model`,
+so the same persona runs on Claude, a local Ollama model, OpenAI, etc., chosen by
+environment variables. The model is also injectable (`llm=`) so the council can be
+unit-tested offline with a fake runnable.
 
 LangChain concepts demonstrated here (see ``notebooks/01_learn_langchain.ipynb``):
 * ``ChatPromptTemplate`` — system + human messages with variables.
@@ -16,14 +18,11 @@ LangChain concepts demonstrated here (see ``notebooks/01_learn_langchain.ipynb``
 
 from __future__ import annotations
 
-import os
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from quantwheel.core.types import CouncilVote, ScoredCandidate, Stance
-
-DEFAULT_MODEL = os.getenv("QUANTWHEEL_MODEL", "claude-sonnet-4-6")
 
 # Rubric appended to every persona's system prompt so all voters answer the same
 # question in the same shape, differing only in *judgement*.
@@ -87,28 +86,31 @@ class PersonaAgent:
         system_prompt: str,
         *,
         llm=None,
+        provider: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0.3,
     ) -> None:
         self.name = name
         self.system_prompt = system_prompt
         self._llm = llm                 # injected runnable (tests) or None (live)
-        self._model = model or DEFAULT_MODEL
+        self._provider = provider       # None -> from env (QUANTWHEEL_PROVIDER)
+        self._model = model             # None -> provider default
         self._temperature = temperature
 
     def _runnable(self):
-        """Build the LCEL chain: prompt | structured-Claude (or injected llm)."""
+        """Build the LCEL chain: prompt | structured chat model (or injected llm)."""
         from langchain_core.prompts import ChatPromptTemplate
 
         prompt = ChatPromptTemplate.from_messages(
             [("system", self.system_prompt + _RUBRIC), ("human", _HUMAN)]
         )
         llm = self._llm
-        if llm is None:  # live path
-            from langchain_anthropic import ChatAnthropic
+        if llm is None:  # live path — provider chosen by env / args
+            from quantwheel.agents.llm import make_chat_model
 
-            llm = ChatAnthropic(
-                model=self._model, temperature=self._temperature
+            llm = make_chat_model(
+                provider=self._provider, model=self._model,
+                temperature=self._temperature,
             ).with_structured_output(PersonaOpinion)
         return prompt | llm
 

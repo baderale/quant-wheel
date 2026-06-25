@@ -18,5 +18,6 @@ regime) is favorable and the trade is liquid, you are in; if the edge is thin or
 quote is unverifiable, you pass — regardless of how good the 'story' sounds."""
 
 
-def make(llm=None, model=None) -> PersonaAgent:
-    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, model=model, temperature=0.2)
+def make(llm=None, provider=None, model=None) -> PersonaAgent:
+    return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, provider=provider,
+                        model=model, temperature=0.2)

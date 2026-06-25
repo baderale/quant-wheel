@@ -57,15 +57,16 @@ def screen(state: WheelState, *, wheel_config: WheelConfig) -> WheelState:
     return {"scan": scan, "message": f"Scored {len(scan.candidates)} names."}
 
 
-def council(state: WheelState, *, llm=None, model: Optional[str] = None) -> WheelState:
+def council(state: WheelState, *, llm=None, provider: Optional[str] = None,
+            model: Optional[str] = None) -> WheelState:
     """Convene the council on the gated/enterable candidates only.
 
-    If nothing passed the gates, we skip the (paid) LLM calls entirely.
+    If nothing passed the gates, we skip the (possibly paid) LLM calls entirely.
     """
     enterable = state["scan"].enterable
     if not enterable:
         return {"verdicts": [], "message": "No gated candidates — council skipped."}
-    verdicts = run_council(enterable, llm=llm, model=model)
+    verdicts = run_council(enterable, llm=llm, provider=provider, model=model)
     return {"verdicts": verdicts}
 
 

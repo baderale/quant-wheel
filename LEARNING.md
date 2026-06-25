@@ -49,10 +49,15 @@ validated; calibration answers "are my probabilities honest?".
 - Swap a tab to a Textual TUI to *prove* the decoupling. *Concept:* if the swap is hard,
   the boundary was wrong.
 
-## Anthropic / Claude notes
-- Model ids: `claude-sonnet-4-6` (fast/cheap default), `claude-opus-4-8` (deepest).
-- Set `ANTHROPIC_API_KEY` in `.env`. The quant core and backtest need **no** API key —
-  only the council/agent do, so you can learn the math offline for free.
+## LLM provider notes (bring your own model)
+- The council/agent are **provider-agnostic** — `agents/llm.py` builds the chat model from
+  `QUANTWHEEL_PROVIDER` (`ollama` | `anthropic` | `openai` | `google`) and `QUANTWHEEL_MODEL`.
+- **Local (Ollama):** `QUANTWHEEL_PROVIDER=ollama`, run `ollama serve`, pull a tool-capable model
+  (`llama3.2`, `qwen2.5`). No API key, fully offline, free.
+- **Cloud:** set the matching key (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_API_KEY`).
+- *LangChain concept:* `.with_structured_output()` works across providers — the persona code is
+  identical whether it's Claude or a local Llama. Swapping models changes one env var.
+- The quant core and backtest need **no** LLM at all, so you can learn the math offline for free.
 
 ## Glossary (options + quant terms used in the code)
 - **CSP** cash-secured put · **CC** covered call · **DTE** days to expiry · **POP**

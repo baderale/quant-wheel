@@ -60,6 +60,7 @@ def _route_after_approval(state: WheelState) -> str:
 
 def build_weekly_agent(
     llm=None,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
     config: WheelConfig = DEFAULT,
     checkpointer=None,
@@ -70,7 +71,9 @@ def build_weekly_agent(
     ----------
     llm:
         Inject a fake runnable to run the council offline (tests/demo). ``None``
-        uses live Claude (needs ``ANTHROPIC_API_KEY``).
+        uses the configured provider (see :mod:`quantwheel.agents.llm`).
+    provider, model:
+        Override the LLM provider/model (else read from the environment).
     checkpointer:
         Required for the human-in-the-loop interrupt to be resumable. Defaults to
         an in-memory saver.
@@ -78,7 +81,7 @@ def build_weekly_agent(
     g = StateGraph(WheelState)
     g.add_node("load_universe", nodes.load_universe)
     g.add_node("screen", partial(nodes.screen, wheel_config=config))
-    g.add_node("council", partial(nodes.council, llm=llm, model=model))
+    g.add_node("council", partial(nodes.council, llm=llm, provider=provider, model=model))
     g.add_node("rank_pick", nodes.rank_pick)
     g.add_node("draft_card", partial(nodes.draft_card, wheel_config=config))
     g.add_node("human_approval", _human_approval)
@@ -102,6 +105,7 @@ def run_weekly_agent(
     universe: Optional[list[str]] = None,
     *,
     llm=None,
+    provider: Optional[str] = None,
     model: Optional[str] = None,
     config: WheelConfig = DEFAULT,
     auto_approve: Optional[bool] = None,
@@ -116,7 +120,7 @@ def run_weekly_agent(
       resumes it via :func:`resume_weekly_agent`).
     * ``True/False`` — answer the gate immediately and run to completion.
     """
-    agent = build_weekly_agent(llm=llm, model=model, config=config)
+    agent = build_weekly_agent(llm=llm, provider=provider, model=model, config=config)
     cfg = {"configurable": {"thread_id": thread_id}}
     initial: WheelState = {"universe": universe} if universe else {}
 
@@ -130,9 +134,10 @@ def run_weekly_agent(
 
 def resume_weekly_agent(
     approved: bool, *, thread_id: str = "weekly",
-    llm=None, model: Optional[str] = None, config: WheelConfig = DEFAULT,
+    llm=None, provider: Optional[str] = None, model: Optional[str] = None,
+    config: WheelConfig = DEFAULT,
 ) -> WheelState:
     """Resume a paused agent with the human's decision (same ``thread_id``)."""
-    agent = build_weekly_agent(llm=llm, model=model, config=config)
+    agent = build_weekly_agent(llm=llm, provider=provider, model=model, config=config)
     cfg = {"configurable": {"thread_id": thread_id}}
     return agent.invoke(Command(resume=approved), cfg)

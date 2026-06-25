@@ -24,12 +24,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# The LangChain/LangGraph council + weekly agent.
+# The LangChain/LangGraph framework (provider-agnostic — pick a provider below).
 agents = [
     "langgraph>=0.2",
+    "langchain>=0.3",
     "langchain-core>=0.3",
-    "langchain-anthropic>=0.2",
 ]
+# --- LLM providers (install whichever you use; choose with QUANTWHEEL_PROVIDER) ---
+llm-anthropic = ["langchain-anthropic>=0.2"]
+llm-ollama = ["langchain-ollama>=0.2"]        # fully local, no API key
+llm-openai = ["langchain-openai>=0.2"]        # incl. OpenAI-compatible local servers
+llm-google = ["langchain-google-genai>=2.0"]
 # The default Streamlit dashboard.
 ui = [
     "streamlit>=1.36",
@@ -48,9 +53,9 @@ research = [
     "matplotlib>=3.8",
     "jupyter>=1.0",
 ]
-# Convenience: install everything.
+# Convenience: everything + the Anthropic and Ollama providers.
 all = [
-    "quantwheel[agents,ui,tui,dev,research]",
+    "quantwheel[agents,ui,tui,dev,research,llm-anthropic,llm-ollama]",
 ]
 
 [project.scripts]
