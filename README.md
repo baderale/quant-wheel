@@ -2,6 +2,8 @@
 
 **A quantitative + agentic engine for running the Wheel options strategy on a small account.**
 
+![quant-wheel backtest — equity curve and rule ablation](docs/equity_curve.png)
+
 Feed it a watchlist → get a ranked, *gated* trade sheet (real implied vol, assignment risk,
 expected value, a position size that actually fits a $1,000 account), a five-persona **investor
 council** that debates each candidate, and a **LangGraph weekly agent** that assembles a
