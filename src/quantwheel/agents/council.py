@@ -1,8 +1,9 @@
 """The investment council: five personas deliberate, then we aggregate.
 
-Each persona (Statistician, Buffett, Burry, Dalio, Simons) votes on the *same*
-evidence. We blend their stances — weighted by each persona's stated conviction —
-into a single score in ``[-1, +1]`` and a short, deterministic consensus summary.
+Each persona — the Statistician, the Value Investor, the Risk Manager, the Macro
+Strategist and the Systematic Quant — votes on the *same* evidence. We blend their
+stances, weighted by each persona's stated conviction, into a single score in
+``[-1, +1]`` and a short, deterministic consensus summary.
 
 Why deterministic aggregation (no extra LLM call)? It's free, reproducible, and
 testable. The *diversity of judgement* comes from the five personas; the
@@ -16,24 +17,29 @@ from typing import Optional
 
 from quantwheel.agents.personas import buffett, burry, dalio, simons, statistician
 from quantwheel.agents.personas.base import PersonaAgent
+from quantwheel.core.config import DEFAULT, WheelConfig
 from quantwheel.core.types import CouncilVerdict, CouncilVote, ScoredCandidate, Stance
 
 
 def build_council(
-    llm=None, provider: Optional[str] = None, model: Optional[str] = None
+    llm=None, provider: Optional[str] = None, model: Optional[str] = None,
+    config: WheelConfig = DEFAULT,
 ) -> list[PersonaAgent]:
     """Instantiate the five council members.
 
     ``provider``/``model`` choose the LLM (Ollama, Anthropic, OpenAI, …) — or
     leave them ``None`` to read ``QUANTWHEEL_PROVIDER``/``QUANTWHEEL_MODEL`` from
-    the environment. Inject ``llm`` to run fully offline in tests.
+    the environment. Inject ``llm`` to run fully offline in tests. ``config``
+    supplies the account size / position count so each persona's rubric reflects
+    the user's real situation instead of a hardcoded small account.
     """
+    ctx = {"account": config.account, "max_positions": config.max_positions}
     return [
-        statistician.make(llm=llm, provider=provider, model=model),
-        buffett.make(llm=llm, provider=provider, model=model),
-        burry.make(llm=llm, provider=provider, model=model),
-        dalio.make(llm=llm, provider=provider, model=model),
-        simons.make(llm=llm, provider=provider, model=model),
+        statistician.make(llm=llm, provider=provider, model=model, **ctx),
+        buffett.make(llm=llm, provider=provider, model=model, **ctx),
+        burry.make(llm=llm, provider=provider, model=model, **ctx),
+        dalio.make(llm=llm, provider=provider, model=model, **ctx),
+        simons.make(llm=llm, provider=provider, model=model, **ctx),
     ]
 
 
@@ -87,9 +93,10 @@ def deliberate(candidate: ScoredCandidate, council: list[PersonaAgent]) -> Counc
 def run_council(
     candidates: list[ScoredCandidate], llm=None,
     provider: Optional[str] = None, model: Optional[str] = None,
+    config: WheelConfig = DEFAULT,
 ) -> list[CouncilVerdict]:
     """Deliberate over every candidate; return verdicts sorted best-first."""
-    council = build_council(llm=llm, provider=provider, model=model)
+    council = build_council(llm=llm, provider=provider, model=model, config=config)
     verdicts = [deliberate(c, council) for c in candidates]
     verdicts.sort(key=lambda v: -v.aggregate_score)
     return verdicts

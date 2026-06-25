@@ -12,7 +12,7 @@ great and still be ``SKIP_CAPITAL`` because it simply doesn't fit $1,000.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 import numpy as np
@@ -195,4 +195,5 @@ def score_universe(
             print(f"  ! skipped {t}: {exc}")
     scored.sort(key=_rank_key)
     return ScanResult(as_of=as_of, account=config.account,
-                      universe=[t.upper() for t in tickers], candidates=scored)
+                      universe=[t.upper() for t in tickers], candidates=scored,
+                      fetched_at=datetime.now())

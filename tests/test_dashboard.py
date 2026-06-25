@@ -18,5 +18,5 @@ def test_dashboard_renders_without_exception():
     at = AppTest.from_file(str(_APP), default_timeout=60)
     at.run()
     assert not at.exception, f"dashboard raised: {at.exception}"
-    # Sanity: the seven tabs are present.
-    assert len(at.tabs) == 7
+    # Sanity: the eight tabs are present (incl. the new Report tab).
+    assert len(at.tabs) == 8

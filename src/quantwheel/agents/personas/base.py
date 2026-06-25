@@ -22,16 +22,44 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from quantwheel.core.config import DEFAULT
 from quantwheel.core.types import CouncilVote, ScoredCandidate, Stance
 
-# Rubric appended to every persona's system prompt so all voters answer the same
-# question in the same shape, differing only in *judgement*.
-_RUBRIC = """
+
+def _rubric(account: float, max_positions: int) -> str:
+    """The shared scoring rubric, parameterised by the actual account context.
+
+    Every persona answers the same question in the same shape, differing only in
+    *judgement*. The account size and position count are injected so the council
+    reasons about the user's real situation — not a hardcoded $1,000 / one-name
+    account — which materially changes the diversification argument.
+    """
+    if max_positions <= 1:
+        size_line = (
+            f"a ${account:,.0f} account that holds ONE position at a time "
+            f"(no diversification to fall back on)"
+        )
+        risk_line = (
+            "Remember: with a single concentrated position, assignment in a "
+            "falling stock can wipe out many weeks of premium and there is no "
+            "other holding to soften it."
+        )
+    else:
+        size_line = (
+            f"a ${account:,.0f} account that holds up to {max_positions} "
+            f"positions at a time"
+        )
+        risk_line = (
+            f"Remember: risk is spread across up to {max_positions} positions, "
+            f"but each name can still be assigned in a falling stock — judge "
+            f"THIS trade on its own merits and its weight in the portfolio."
+        )
+    return f"""
 
 You are sitting on an investment council evaluating a single cash-secured PUT
-trade (the Wheel strategy) for a SMALL $1,000 account that holds ONE position at
-a time. Selling a cash-secured put means: collect premium now; if the stock
-closes below the strike at expiry you are assigned 100 shares at the strike.
+trade (the Wheel strategy) for {size_line}. Selling a cash-secured put means:
+collect premium now; if the stock closes below the strike at expiry you are
+assigned 100 shares at the strike.
 
 Judge ONLY this trade, in character. Return:
 - stance: STRONG_FOR / FOR / NEUTRAL / AGAINST / STRONG_AGAINST
@@ -39,8 +67,7 @@ Judge ONLY this trade, in character. Return:
 - rationale: 1-3 sentences, in your voice
 - key_points: 2-4 short bullet phrases driving your view
 
-Remember the small-account reality: assignment in a falling stock can wipe out
-many weeks of premium, and there is no diversification to fall back on.
+{risk_line}
 """
 
 _HUMAN = "Evaluate this cash-secured put candidate:\n\n{evidence}\n\nGive your verdict."
@@ -89,6 +116,8 @@ class PersonaAgent:
         provider: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0.3,
+        account: float = DEFAULT.account,
+        max_positions: int = DEFAULT.max_positions,
     ) -> None:
         self.name = name
         self.system_prompt = system_prompt
@@ -96,13 +125,16 @@ class PersonaAgent:
         self._provider = provider       # None -> from env (QUANTWHEEL_PROVIDER)
         self._model = model             # None -> provider default
         self._temperature = temperature
+        self._account = account         # injected so the rubric reflects reality
+        self._max_positions = max_positions
 
     def _runnable(self):
         """Build the LCEL chain: prompt | structured chat model (or injected llm)."""
         from langchain_core.prompts import ChatPromptTemplate
 
+        rubric = _rubric(self._account, self._max_positions)
         prompt = ChatPromptTemplate.from_messages(
-            [("system", self.system_prompt + _RUBRIC), ("human", _HUMAN)]
+            [("system", self.system_prompt + rubric), ("human", _HUMAN)]
         )
         llm = self._llm
         if llm is None:  # live path — provider chosen by env / args

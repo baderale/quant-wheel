@@ -30,8 +30,8 @@ reports/*.md
 *.parquet
 data_cache/
 
-# --- Local tracker store ---
-data/
+# --- Local tracker store (repo-root only; not the core/data source package) ---
+/data/
 
 # --- OS / editors ---
 .DS_Store

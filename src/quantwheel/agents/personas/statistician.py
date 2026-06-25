@@ -15,6 +15,6 @@ P(assign)) and of estimated quotes you cannot verify. You do not care about the
 company's 'story'; you care whether the edge is real and statistically sound."""
 
 
-def make(llm=None, provider=None, model=None) -> PersonaAgent:
+def make(llm=None, provider=None, model=None, **kwargs) -> PersonaAgent:
     return PersonaAgent(NAME, SYSTEM_PROMPT, llm=llm, provider=provider,
-                        model=model, temperature=0.1)
+                        model=model, temperature=0.1, **kwargs)
