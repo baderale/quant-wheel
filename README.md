@@ -1,3 +1,5 @@
+> **Archived 2026-11-08.** This project was consolidated into a private repo, `half-a-wheel` (folder `contrib/quant-wheel/`), which is where Wheel / options work continues. This repo is read-only.
+
 # quant-wheel
 
 **A quantitative + agentic engine for running the Wheel options strategy on a small account.**
